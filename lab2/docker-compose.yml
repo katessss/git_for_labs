@@ -1,0 +1,6 @@
+services:
+  worker: # имя сервиса 
+    build: .
+    restart: always 
+    volumes:
+      -  ./shared_volume:/data 
