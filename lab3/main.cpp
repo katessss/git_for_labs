@@ -47,9 +47,9 @@ int main(int argc, char* argv[]) {
     int files_processed = 0;
     int duplicates_found = 0;
 
-    cout << "Сканирование директории: " << filesystem::absolute(target_dir) << " ...\n" << endl;
+    cout << "Сканирование директории: " << target_dir << endl;
 
-    for (const auto& obj : filesystem::recursive_directory_iterator(target_dir)) {
+    for (auto& obj : filesystem::recursive_directory_iterator(target_dir)) {
         if (!obj.is_regular_file() || obj.is_symlink()) {
             continue;
         }
@@ -57,26 +57,22 @@ int main(int argc, char* argv[]) {
         filesystem::path current_path = obj.path();
         files_processed++;
 
-        try {
-            string hash = compute_file_hash(current_path);
-            auto it = seen_hashes.find(hash);
+        string hash = compute_file_hash(current_path);
+        auto it = seen_hashes.find(hash);
 
-            if (it == seen_hashes.end()) {
-                seen_hashes[hash] = current_path;
-            } else {
-                filesystem::path original_path = it->second; 
-                if (filesystem::equivalent(current_path, original_path)) { 
-                    continue;
-                }
-                
-                cout << "Дубликат " << current_path.filename() << " == " << original_path.filename() << endl;
-                filesystem::remove(current_path);                
-                filesystem::create_hard_link(original_path, current_path);
-        
-                duplicates_found++;
+        if (it == seen_hashes.end()) {
+            seen_hashes[hash] = current_path;
+        } else {
+            filesystem::path original_path = it->second; 
+            if (filesystem::equivalent(current_path, original_path)) { 
+                continue;
             }
-        } catch (const exception& ex) {
-            cerr << "Ошибка при обработке файла " << current_path << ": " << ex.what() << endl;
+            
+            cout << "Дубликат " << current_path.filename() << " == " << original_path.filename() << endl;
+            filesystem::remove(current_path);                
+            filesystem::create_hard_link(original_path, current_path);
+    
+            duplicates_found++;
         }
     }
 
