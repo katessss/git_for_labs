@@ -64,7 +64,7 @@ void producer() {
 
 
 void consumer() {
-    for (int i = 1; i <= 5; ++i) { /
+    for (int i = 1; i <= 5; ++i) { 
         EventData* event = monitor.pop();        
         delete event;
     }
