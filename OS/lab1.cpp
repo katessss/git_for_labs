@@ -8,8 +8,10 @@ using namespace std;
 struct EventData {
     int id;
     string payload;
-
-    EventData(int i, string s) : id(i), payload(s) {}
+    EventData(int i, string s){
+        id = i;
+        payload = s;
+    }
 };
 
 
