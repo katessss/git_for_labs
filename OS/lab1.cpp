@@ -29,7 +29,7 @@ private:
         data = newData;  
         ready = true;    
         
-        cout << "[Поставщик]  -> Событие отправлено..." << endl;
+        cout << "[Поставщик]  -> Событие отправлено:" << newData->id << endl;
         lock.unlock(); 
         cv_produced.notify_one();
     }
@@ -44,7 +44,7 @@ private:
         ready = false;
         data = nullptr;
 
-        cout << "[Потребитель] <- Событие получено..." << endl;
+        cout << "[Потребитель] <- Событие получено: " << receivedData->id << endl;
         lock.unlock();
         cv_consumed.notify_one();
         return receivedData; 
