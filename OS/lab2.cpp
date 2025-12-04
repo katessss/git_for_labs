@@ -15,7 +15,7 @@ using namespace std;
 const int PORT = 1984; 
 volatile int wasSigHup = 0;
 
-void sigHupHa   ndler(int r) {
+void sigHupHandler(int r) {
     wasSigHup = 1;
 }   
 
