@@ -6,8 +6,8 @@
 #include <linux/version.h> 
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Student TSU");
-MODULE_DESCRIPTION("TSU Lab Part 1");
+MODULE_AUTHOR("Student of TSU");
+MODULE_DESCRIPTION("OS Lab 3 Part 2");
 
 #define FILENAME "tsulab" 
 static struct proc_dir_entry *our_proc_file = NULL;
@@ -24,7 +24,7 @@ static ssize_t my_super_read(struct file *file_pointer, char __user *buffer, siz
     if (*offset > 0) 
         return 0;
 
-    calculate_result(s, sizeof(s));
+    calculate_result(   s, sizeof(s));
     len = strlen(s);
 
     if (len > buffer_length) 

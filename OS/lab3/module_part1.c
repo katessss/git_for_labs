@@ -3,8 +3,8 @@
 #include <linux/init.h>
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Student TSU");
-MODULE_DESCRIPTION("TSU Lab Part 1");
+MODULE_AUTHOR("Student of TSU");
+MODULE_DESCRIPTION("OS Lab 3 Part 1");
 
 static int __init tsu_init(void) {
     pr_info("Welcome to the Tomsk State University\n");
