@@ -14,8 +14,16 @@ static struct proc_dir_entry *our_proc_file = NULL;
 
 // ИНДИВИДУАЛЬНОЕ ЗАДАНИЕ
 static void calculate_result(char *buffer, size_t max_len) {
-    snprintf(buffer, max_len, "results...\n");
+    u64 current_time_sec = ktime_get_real_seconds();
+
+    const u64 start_time_sec = (u64)-28893254400LL; 
+    u64 total_seconds = current_time_sec - start_time_sec;
+    u64 total_days = total_seconds / (60 * 60 * 24);
+
+    snprintf(buffer, max_len, 
+             "Возраст Крабовидной туманности: %llu дней\n", total_days);
 }
+
 
 static ssize_t my_super_read(struct file *file_pointer, char __user *buffer, size_t buffer_length, loff_t *offset) {
     char s[256];
