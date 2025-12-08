@@ -24,7 +24,7 @@ static ssize_t my_super_read(struct file *file_pointer, char __user *buffer, siz
     if (*offset > 0) 
         return 0;
 
-    calculate_result(   s, sizeof(s));
+    calculate_result(s, sizeof(s));
     len = strlen(s);
 
     if (len > buffer_length) 
