@@ -17,9 +17,8 @@ static struct proc_dir_entry *our_proc_file = NULL;
 // ИНДИВИДУАЛЬНОЕ ЗАДАНИЕ
 static void calculate_result(char *buffer, size_t max_len) {
     u64 current_time_sec = ktime_get_real_seconds();
-
-    const u64 start_time_sec = (u64)-28893254400LL; 
-    u64 total_seconds = current_time_sec - start_time_sec;
+    const u64 epoch_offset_sec = 28893254400ULL;
+    u64 total_seconds = epoch_offset_sec + current_time_sec;
     u64 total_days = total_seconds / (60 * 60 * 24);
 
     snprintf(buffer, max_len, 
