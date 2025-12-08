@@ -14,7 +14,7 @@ static struct proc_dir_entry *our_proc_file = NULL;
 
 // ИНДИВИДУАЛЬНОЕ ЗАДАНИЕ
 static void calculate_result(char *buffer, size_t max_len) {
-    snprintf(buffer, max_len, "results...");
+    snprintf(buffer, max_len, "results...\n");
 }
 
 static ssize_t my_super_read(struct file *file_pointer, char __user *buffer, size_t buffer_length, loff_t *offset) {
