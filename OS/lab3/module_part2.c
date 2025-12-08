@@ -21,8 +21,7 @@ static void calculate_result(char *buffer, size_t max_len) {
     u64 total_seconds = epoch_offset_sec + current_time_sec;
     u64 total_days = total_seconds / (60 * 60 * 24);
 
-    snprintf(buffer, max_len, 
-             "Возраст Крабовидной туманности: %llu дней\n", total_days);
+    snprintf(buffer, max_len, "Возраст Крабовидной туманности: %llu дней\n", total_days);
 }
 
 
