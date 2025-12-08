@@ -4,6 +4,8 @@
 #include <linux/proc_fs.h> 
 #include <linux/uaccess.h>  
 #include <linux/version.h> 
+#include <linux/jiffies.h> 
+#include <linux/time.h>   
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Student of TSU");
