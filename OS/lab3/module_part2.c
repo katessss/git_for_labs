@@ -17,7 +17,7 @@ static struct proc_dir_entry *our_proc_file = NULL;
 // ИНДИВИДУАЛЬНОЕ ЗАДАНИЕ
 static void calculate_result(char *buffer, size_t max_len) {
     u64 current_time_sec = ktime_get_real_seconds();
-    const u64 epoch_offset_sec = 28893254400ULL;
+    const u64 epoch_offset_sec = 28893254400ULL; // от 4 июля 1054 года до 1 января 1970 
     u64 total_seconds = epoch_offset_sec + current_time_sec;
     u64 total_days = total_seconds / (60 * 60 * 24);
 
