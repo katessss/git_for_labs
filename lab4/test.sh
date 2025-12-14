@@ -9,5 +9,6 @@ for i in {1..10}; do
   id=$((i/2))
   echo "task $task | id $id"
   
-  curl -s -X POST "$API_URL" -H "Content-Type: application/json" -d "{\"order_id\": \"$id\", \"item\": \"$task\"}"
+  curl -s -X POST "$API_URL" -H "Content-Type: application/json" -d "{\"id\": \"$id\", \"item\": \"$task\"}"
+
 done

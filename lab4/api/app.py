@@ -21,7 +21,7 @@ def delivery_report(err, msg):
         print(f"SUCCESS: Delivered to {msg.topic()} [{msg.partition()}]")
 
 
-@app.post("/order")
+@app.post("/test_lab4")
 def create_order(order: Order):
     message_value = order.item.encode('utf-8')
     try:

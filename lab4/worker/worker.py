@@ -35,7 +35,7 @@ def main():
             item = msg.value().decode('utf-8') 
             print(f" [x] Worker {WORKER_ID} получил (from partition {msg.partition()}): {item}")
             
-            time.sleep(len(item) * 0.5) # Имитация длительной работы
+            time.sleep(len(item) * 10) # Имитация бурной деятельности
             
             print(f" [v] Worker {WORKER_ID} закончил: {item}")
 
