@@ -27,7 +27,7 @@ services:
       - "8000:8000" 
     environment:
       - KAFKA_HOST=kafka:29092 
-      - KAFKA_TOPIC=__consumer_offsets    
+      - KAFKA_TOPIC=LAB4    
     depends_on:
       - kafka
 
@@ -35,7 +35,7 @@ services:
     build: ./worker
     environment:
       - KAFKA_HOST=kafka:29092
-      - KAFKA_TOPIC=__consumer_offsets    
+      - KAFKA_TOPIC=LAB4    
       - KAFKA_GROUP=worker_group 
     depends_on:
       - kafka
