@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.venv/
+venv/
+ENV/
+env/
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
+# Jupyter / notebooks
+.ipynb_checkpoints/
+
+# C / C++
+*.o
+*.obj
+*.exe
+*.out
+*.a
+*.so
+*.dll
+*.dylib
+*.gcda
+*.gcno
+*.gch
+*.class
+*.lo
+*.la
+
+# Build dirs
+build/
+bin/
+dist/
+Debug/
+Release/
+cmake-build-debug/
+cmake-build-release/
+
+# Docker
+.docker/
+*.tar
+
+# IDE / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS files
+.AppleDouble
+.LSOverride
+
+# Project-specific generated files
+*.log
+*.tmp
+*.temp
