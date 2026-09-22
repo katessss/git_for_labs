@@ -23,10 +23,10 @@ WORD_RE = re.compile(r"^[А-Яа-яЁё]+(?:-[А-Яа-яЁё]+)*$")
 
 # Приведение «вторых» падежей pymorphy3 к основным
 CASE_NORMALIZATION = {
-    "gen1": "gent", "gen2": "gent",   # чашка чаю -> родительный
-    "acc2": "accs",                    # в солдаты -> винительный
-    "loc1": "loct", "loc2": "loct",   # в лесу -> предложный
-    "voct": "nomn",                    # звательный -> именительный
+    "gen1": "gent", "gen2": "gent",   # -> родительный
+    "acc2": "accs",                    # -> винительный
+    "loc1": "loct", "loc2": "loct",   # -> предложный
+    "voct": "nomn",                    # -> именительный
 }
 
 
@@ -96,7 +96,7 @@ def main():
         line = f"{p1.normal_form} {p2.normal_form}"
         line += f"\t<- {left} {right}\t[{p1.tag} | {p2.tag}]"
         print(line)
-        print(f"\nВсего пар: {len(pairs)}")
+    print(f"\nВсего пар: {len(pairs)}")
 
 
 if __name__ == "__main__":
