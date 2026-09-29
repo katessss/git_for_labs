@@ -67,3 +67,5 @@ Thumbs.db
 *.tmp
 *.temp
 *.md
+
+bow_model/
