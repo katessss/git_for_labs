@@ -4,15 +4,9 @@ import random
 import time
 import torch
 from tqdm.auto import tqdm
-from IPython.display import display, Markdown
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
-
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from tqdm.auto import tqdm
-
-from collections import Counter
-from IPython.display import display, Markdown
-import pandas as pd
 
 from .utils import find_progress, find_progress, find_progress_with_pos, print_stats
 from .prompts import prompts, words
@@ -87,9 +81,7 @@ def run_attempt(attempt, gpu_id):
     top_k = random.choice([20, 50, 100])
     no_repeat_ngram_size = random.choice([0, 2])
 
-    input_ids = tok.encode(
-        prompt, return_tensors="pt"
-    ).to(f"cuda:{gpu_id}")
+    input_ids = tok.encode(prompt, return_tensors="pt").to(f"cuda:{gpu_id}")
 
     start = time.time()
 
