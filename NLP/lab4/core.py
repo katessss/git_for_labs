@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from tqdm.auto import tqdm
 
 from .utils import find_progress, find_progress, find_progress_with_pos, print_stats
-from .prompts import prompts, words
+from .prompts import prompts, sys_prompt, words
 
 model_name = "sberbank-ai/rugpt3large_based_on_gpt2"
 
@@ -75,7 +75,7 @@ def generate(
 def run_attempt(attempt, gpu_id):
     model_i = models[gpu_id]
     prompt_id = random.randrange(len(prompts))
-    prompt = prompts[prompt_id]
+    prompt = sys_prompt.strip() + "\n\n" + prompts[prompt_id].strip()
 
     temperature = random.choice([0.7, 0.8, 1.0, 1.2])
     top_k = random.choice([20, 50, 100])
