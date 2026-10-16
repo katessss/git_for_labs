@@ -146,7 +146,7 @@ def run_attempt(attempt, gpu_id):
 
     # Полный текст при успехе
     if result["success"]:
-        print("\n🎉 ВСЕ 10 СЛОВ НАЙДЕНЫ!", flush=True)
+        print("\nВСЕ 10 СЛОВ НАЙДЕНЫ!", flush=True)
         print(f"Попытка: {attempt} | GPU: {gpu_id}", flush=True)
         print(f"Параметры: temperature={temperature}, top_k={top_k}")
         print("\nПромпт:\n", prompt, flush=True)
@@ -203,7 +203,7 @@ with ThreadPoolExecutor(max_workers=gpu_count) as executor:
                     "top_k": result["top_k"]
                 }
 
-                print("\n🏆 НОВЫЙ РЕКОРД!", flush=True)
+                print("\nНОВЫЙ РЕКОРД!", flush=True)
                 print(f"Попытка: {attempt}")
                 print(f"Результат: {best_count}/10")
                 print("Промпт:\n", best_prompt, flush=True)
