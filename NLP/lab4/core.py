@@ -3,7 +3,6 @@ import re
 import random
 import time
 import torch
-from tqdm.auto import tqdm
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 from concurrent.futures import ThreadPoolExecutor
 from tqdm.auto import tqdm
@@ -15,8 +14,6 @@ model_name = "sberbank-ai/rugpt3large_based_on_gpt2"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 tok = GPT2Tokenizer.from_pretrained(model_name)
-# model = GPT2LMHeadModel.from_pretrained(model_name).to(device)
-# model.eval()
 
 MAX_NEW_TOKENS = 1_000
 TOP_P = 0.95
@@ -47,7 +44,7 @@ print("gpu_count:", gpu_count)
 
 
 
-
+# функция генерации (не используется, использую напрямую вызываю model_i.generate() )
 def generate(
     model, tok, text,
     do_sample=True, max_length=100, repetition_penalty=5.0,
@@ -72,6 +69,8 @@ def generate(
 
     return [tok.decode(ids, skip_special_tokens=True) for ids in out]
 
+
+# попытка генерации текста 
 def run_attempt(attempt, gpu_id):
     model_i = models[gpu_id]
     prompt_id = random.randrange(len(prompts))
@@ -136,14 +135,10 @@ def run_attempt(attempt, gpu_id):
             flush=True
         )
         
-        # print("\nИсходный промпт:\n", prompt, flush=True)
         print(f"\nНайдено: {count}/10 — {' → '.join(found)}", flush=True)
         print(f"Ещё не найдены: {', '.join(missing) if missing else 'все найдены'}", flush=True)
-        # print(f"Следующее ожидаемое слово: {missing or 'все найдены'}", flush=True)
-        # print("\nСгенерированный текст:\n", generated, flush=True)
         
         
-
     # Полный текст при успехе
     if result["success"]:
         print("\nВСЕ 10 СЛОВ НАЙДЕНЫ!", flush=True)
@@ -155,6 +150,7 @@ def run_attempt(attempt, gpu_id):
     return result
 
 
+# статистика
 attempts_stats = []
 best_count = 0
 best_text = ""
@@ -177,6 +173,7 @@ with ThreadPoolExecutor(max_workers=gpu_count) as executor:
         for attempt, future in batch:
             result = future.result()
 
+            # обновление статистики
             attempts_stats.append({
                 "attempt": result["attempt"],
                 "gpu": result["gpu"],
@@ -194,13 +191,15 @@ with ThreadPoolExecutor(max_workers=gpu_count) as executor:
             if len(attempts_stats) % STATS_EVERY == 0:
                 print_stats(attempts_stats)
 
+            # новый рекорд
             if result["count"] > best_count:
                 best_count = result["count"]
                 best_text = result["text"]
                 best_prompt = result["prompt"]
                 best_params = {
                     "temperature": result["temperature"],
-                    "top_k": result["top_k"]
+                    "top_k": result["top_k"],
+                    "no_repeat_ngram_size": result["no_repeat_ngram_size"],
                 }
 
                 print("\nНОВЫЙ РЕКОРД!", flush=True)
