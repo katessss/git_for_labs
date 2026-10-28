@@ -69,3 +69,4 @@ Thumbs.db
 *.md
 
 bow_model/
+.env

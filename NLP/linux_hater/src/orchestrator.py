@@ -7,6 +7,7 @@ from collections import Counter
 from typing import Any
 from urllib.parse import urlparse
 
+import requests
 from openai import OpenAI
 from langchain_core.tools import BaseTool
 
@@ -134,6 +135,7 @@ class Orchestrator:
         ]
         calls = 0
         seen = Counter()
+        wikipedia_unavailable = False
 
         for _step in range(self.max_steps):
 
@@ -178,7 +180,9 @@ class Orchestrator:
                     signature = (name, json.dumps(args, sort_keys=True, ensure_ascii=False))
                     seen[signature] += 1
 
-                    if calls > self.max_tool_calls:
+                    if wikipedia_unavailable:
+                        result = "Пропущено: Wikipedia API уже сообщил о временной ошибке."
+                    elif calls > self.max_tool_calls:
                         result = "Остановлено защитным лимитом вызовов инструментов."
                     elif seen[signature] > 2:
                         result = "Этот же вызов уже повторялся дважды. Выбери другой шаг или сформируй вывод."
@@ -195,6 +199,20 @@ class Orchestrator:
                         result = self.tools[name].invoke(args)
                 except Exception as exc:
                     result = f"Ошибка инструмента ({type(exc).__name__}): {exc}"
+                    is_transient_http_error = (
+                        isinstance(exc, requests.HTTPError)
+                        and exc.response is not None
+                        and exc.response.status_code in (429, 500, 502, 503, 504)
+                    )
+                    if isinstance(exc, requests.RequestException) and (
+                        is_transient_http_error or name in self.tools
+                    ):
+                        wikipedia_unavailable = True
+                        result = (
+                            "Оба маршрута Wikipedia временно недоступны. "
+                            "Дальнейшие вызовы Wikipedia в этой пачке будут пропущены. "
+                            + str(exc)
+                        )
 
                 messages.append({
                     "role": "tool",
@@ -202,19 +220,31 @@ class Orchestrator:
                     "content": str(result)[:12000],
                 })
 
-                if calls >= self.max_tool_calls:
-                    messages.append({
-                        "role": "system",
-                        "content": "Лимит инструментов исчерпан. Используй уже собранные данные и дай финальный ответ без новых вызовов.",
-                    })
-                    break
+            tool_limit_reached = calls >= self.max_tool_calls
+            if wikipedia_unavailable:
+                messages.append({
+                    "role": "system",
+                    "content": "Wikipedia вернула временную ошибку. Больше не вызывай инструменты; сформируй финальный ответ с указанием ограничения проверки.",
+                })
+            if tool_limit_reached:
+                messages.append({
+                    "role": "system",
+                    "content": "Лимит инструментов исчерпан. Используй уже собранные данные и дай финальный ответ без новых вызовов.",
+                })
+            if wikipedia_unavailable or tool_limit_reached:
+                break
 
         # One final no-tools call ensures a graceful ending if the step limit is hit.
         response = self.client.chat.completions.create(
             model=self.model,
             messages=messages + [{
                 "role": "system",
-                "content": "Лимит шагов исчерпан. Дай финальный ответ только на основе уже полученных результатов; не вызывай инструменты.",
+                "content": (
+                    "Wikipedia недоступна. Дай финальный ответ только на основе уже полученных результатов "
+                    "и прямо укажи, что проверку завершить не удалось; не вызывай инструменты."
+                    if wikipedia_unavailable
+                    else "Лимит шагов или инструментов исчерпан. Дай финальный ответ только на основе уже полученных результатов; не вызывай инструменты."
+                ),
             }],
             tool_choice="none",
             temperature=0.7,
