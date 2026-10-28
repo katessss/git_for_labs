@@ -32,17 +32,17 @@ SYSTEM_PROMPT = """
 
 Ты — саркастичный участник холивара Linux vs Microsoft Windows. Твоя задача — остроумно защищать Windows, проверяя утверждения пользователя по Wikipedia.
 
-**Структура каждого ответа — строго в следующем порядке:**
+Структура каждого ответа — строго в следующем порядке:
 
-1. **Театральное вступление.** Начни с короткой, яркой шутки, ироничного комментария или преувеличенно драматичной реакции на заявление пользователя. Не начинай с сухих фактов, оговорок или описания результатов поиска. Вступление должно звучать как начало стендап-выступления на техническом холиваре.
-2. **Разбор аргумента.** Объясни с юмором, в чём может заключаться преувеличение пользователя. Если утверждение ещё не проверено, не выдавай предположение за установленный факт.
-3. **Доказательная часть.** Приведи конкретные результаты проверки в Wikipedia: названия страниц, прямые ссылки и краткое объяснение того, что именно они подтверждают или не подтверждают.
-4. **Финальный вердикт.** В конце сформулируй краткий, запоминающийся вывод с шуткой в духе Linux vs Windows. Если найдены сопоставимые возможности Windows, приведи ссылки на соответствующие материалы. Если доказательств недостаточно, честно скажи об этом.
+1. Театральное вступление. Начни с короткой, яркой шутки, ироничного комментария или преувеличенно драматичной реакции на заявление пользователя. Не начинай с сухих фактов, оговорок или описания результатов поиска. Вступление должно звучать как начало стендап-выступления на техническом холиваре.
+2. Разбор аргумента. Объясни с юмором, в чём может заключаться преувеличение пользователя. Если утверждение ещё не проверено, не выдавай предположение за установленный факт.
+3. Доказательная часть. Приведи конкретные результаты проверки в Wikipedia: названия страниц, прямые ссылки и краткое объяснение того, что именно они подтверждают или не подтверждают.
+4. Финальный вердикт. В конце сформулируй краткий, запоминающийся вывод с шуткой в духе Linux vs Windows. Если найдены сопоставимые возможности Windows, приведи ссылки на соответствующие материалы. Если доказательств недостаточно, честно скажи об этом.
 
 
 Сами разделы подписывать не надо, просто аргночно и лаконично выстраивый ответ. 
 
-**Правила проверки фактов:**
+Правила проверки фактов:
 
 - Сначала получи результаты необходимых инструментов, а затем формируй окончательный ответ. Шуточное вступление не должно заменять проверку.
 - Если пользователь прислал ссылку на Wikipedia, проверь соответствующую страницу. Остальные URL игнорируй.
@@ -53,7 +53,7 @@ SYSTEM_PROMPT = """
 - Если API вернул ошибку или данные неполные, явно укажи ограничение проверки.
 - Сарказм должен быть острым и театральным, но направленным на аргументы, технические мифы и мемы, а не на реальные личные качества пользователя.
 
-**Стиль:** стендап-комик, который слишком серьёзно относится к компьютерным операционным системам. Метафоры, гиперболы и каламбуры приветствуются. Сухой академический тон — только в доказательной части. Финал должен быть смешным, но фактически честным.
+Стиль: стендап-комик, который слишком серьёзно относится к компьютерным операционным системам. Метафоры, гиперболы и каламбуры приветствуются. Сухой академический тон — только в доказательной части. Финал должен быть смешным, но фактически честным.
 
 """
 
@@ -100,6 +100,7 @@ class Orchestrator:
         model: str | None = None,
         max_steps: int = 8,
         max_tool_calls: int = 10,
+        max_history_messages: int = 32,
     ):
         self.client = OpenAI(
             api_key=api_key or os.getenv("DEEPSEEK_API_KEY"),
@@ -108,6 +109,8 @@ class Orchestrator:
         self.model = model or os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
         self.max_steps = max(1, max_steps)
         self.max_tool_calls = max(1, max_tool_calls)
+        # Leave room for the fixed prompt and one complete tool-call batch.
+        self.max_history_messages = max(6 + 2 * self.max_tool_calls, max_history_messages)
         self.tools = {tool.name: tool for tool in TOOLS}
         self.tool_specs = [_schema_for(tool) for tool in TOOLS]
 
@@ -138,6 +141,7 @@ class Orchestrator:
         wikipedia_unavailable = False
 
         for _step in range(self.max_steps):
+            messages = self._trim_history(messages)
 
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -235,6 +239,7 @@ class Orchestrator:
                 break
 
         # One final no-tools call ensures a graceful ending if the step limit is hit.
+        messages = self._trim_history(messages)
         response = self.client.chat.completions.create(
             model=self.model,
             messages=messages + [{
@@ -252,6 +257,42 @@ class Orchestrator:
             extra_body={"thinking": {"type": "disabled"}},
         )
         return response.choices[0].message.content or "Лимит шагов достигнут — даже спор об ОС требует перерыва."
+
+    def _trim_history(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Keep the initial instructions and newest complete tool-call batches."""
+        if len(messages) <= self.max_history_messages:
+            return messages
+
+        prefix = messages[:3]
+        history = messages[3:]
+        batches: list[list[dict[str, Any]]] = []
+        index = 0
+        while index < len(history):
+            start = index
+            item = history[index]
+            index += 1
+            if item.get("role") == "assistant" and item.get("tool_calls"):
+                expected = len(item["tool_calls"])
+                found = 0
+                while index < len(history) and found < expected:
+                    if history[index].get("role") == "tool":
+                        found += 1
+                    index += 1
+            # Keep any system guidance attached to this completed batch.
+            while index < len(history) and history[index].get("role") == "system":
+                index += 1
+            batches.append(history[start:index])
+
+        budget = self.max_history_messages - len(prefix)
+        kept: list[list[dict[str, Any]]] = []
+        used = 0
+        for batch in reversed(batches):
+            if used + len(batch) > budget:
+                break
+            kept.append(batch)
+            used += len(batch)
+        kept.reverse()
+        return prefix + [item for batch in kept for item in batch]
 
 
 def _is_wikipedia(url: str) -> bool:

@@ -13,6 +13,7 @@ def main() -> None:
         model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
         max_steps=int(os.getenv("MAX_STEPS", "8")),
         max_tool_calls=int(os.getenv("MAX_TOOL_CALLS", "10")),
+        max_history_messages=int(os.getenv("MAX_HISTORY_MESSAGES", "32")),
     )
     print("Linux vs Windows Agent — вводите утверждение о Linux. Для выхода: exit / quit\n")
 
