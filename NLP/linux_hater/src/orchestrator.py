@@ -68,7 +68,6 @@ def _schema_for(tool: BaseTool) -> dict:
     schema = tool.args_schema.model_json_schema()
     schema.pop("title", None)
     schema.pop("$defs", None)
-    # DeepSeek tool calling expects JSON Schema parameters.
     return {
         "type": "function",
         "function": {
@@ -87,7 +86,7 @@ def _extract_wikipedia_urls(text: str) -> list[str]:
         host = (urlparse(url).hostname or "").lower()
         if host == "wikipedia.org" or host.endswith(".wikipedia.org"):
             allowed.append(url)
-        # All other links are deliberately ignored.
+        # остальное игнорируем
     return list(dict.fromkeys(allowed))
 
 
@@ -109,7 +108,6 @@ class Orchestrator:
         self.model = model or os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
         self.max_steps = max(1, max_steps)
         self.max_tool_calls = max(1, max_tool_calls)
-        # Leave room for the fixed prompt and one complete tool-call batch.
         self.max_history_messages = max(6 + 2 * self.max_tool_calls, max_history_messages)
         self.tools = {tool.name: tool for tool in TOOLS}
         self.tool_specs = [_schema_for(tool) for tool in TOOLS]
@@ -117,8 +115,6 @@ class Orchestrator:
     def run(self, user_text: str) -> str:
         urls = _extract_wikipedia_urls(user_text)
         if urls:
-            # User supplied Wikipedia links: read those pages first.
-            # Non-Wikipedia URLs are never passed to any tool.
             initial_instruction = (
                 "Проверь утверждение по указанным ссылкам Wikipedia. Сначала вызови "
                 "read_wikipedia_page для каждой ссылки. Не делай поиск по голословному "
@@ -150,8 +146,6 @@ class Orchestrator:
                 tool_choice="auto",
                 temperature=0.7,
                 max_tokens=1400,
-                # DeepSeek's tool-calling examples use non-thinking mode for
-                # broad compatibility with tool_choice=auto.
                 extra_body={"thinking": {"type": "disabled"}},
             )
             message = response.choices[0].message
@@ -159,7 +153,6 @@ class Orchestrator:
             if not message.tool_calls:
                 return message.content or "Кажется, агент потерял дар сарказма. Попробуйте ещё раз."
 
-            # Keep the assistant's tool-call message in conversation history.
             messages.append({
                 "role": "assistant",
                 "content": message.content,
@@ -193,7 +186,6 @@ class Orchestrator:
                     elif name not in self.tools:
                         result = f"Неизвестный инструмент: {name}"
                     elif name == "read_wikipedia_page":
-                        # Defense in depth: enforce Wikipedia-only URLs outside the model.
                         url = str(args.get("url", ""))
                         if url not in urls and not _is_wikipedia(url):
                             result = "Ссылка отклонена: разрешён только домен wikipedia.org."
@@ -238,7 +230,6 @@ class Orchestrator:
             if wikipedia_unavailable or tool_limit_reached:
                 break
 
-        # One final no-tools call ensures a graceful ending if the step limit is hit.
         messages = self._trim_history(messages)
         response = self.client.chat.completions.create(
             model=self.model,
@@ -278,7 +269,6 @@ class Orchestrator:
                     if history[index].get("role") == "tool":
                         found += 1
                     index += 1
-            # Keep any system guidance attached to this completed batch.
             while index < len(history) and history[index].get("role") == "system":
                 index += 1
             batches.append(history[start:index])

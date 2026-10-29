@@ -32,7 +32,7 @@ def _new_session() -> requests.Session:
 
 
 def _user_agent() -> str:
-    # Wikimedia requires a descriptive client identity with contact details.
+    # Wikimedia требует contact details
     contact = os.getenv("WIKIPEDIA_CONTACT", DEFAULT_CONTACT)
     return f"LinuxWindowsDebateLab/1.1 ({contact})"
 
@@ -68,9 +68,7 @@ def _api(params: dict) -> dict:
             ) from exc
         raise
     data = response.json()
-    # MediaWiki can return application-level errors (for example, maxlag)
-    # inside an HTTP 200 response. Surface those as errors rather than passing
-    # an empty result to the model as if the search succeeded.
+    # MediaWiki может вернуть application-level errors
     if "error" in data:
         error = data["error"]
         raise requests.RequestException(
